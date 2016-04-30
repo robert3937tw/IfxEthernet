@@ -33,15 +33,15 @@
 #pragma comment (lib, "Mswsock.lib")
 #pragma comment (lib, "AdvApi32.lib")
 
-#define TX_BUFLEN 1460	//max 1460 but "Aurix:  " occupi 8 bytes
-#define RX_BUFLEN 910
+#define TX_BUFLEN 900	//max 1460 but "Aurix:  " occupi 8 bytes
+#define RX_BUFLEN 920
 //#define DEFAULT_BUFLEN 50
 #define SERVER_PORT "40050"
-#define SERVER_IP "192.168.0.20"
+#define SERVER_IP "192.168.0.21"
 
 struct package_struct
 {
-	float TOFarray[225];	
+	int TOFarray[225];	
 		
 };
 
@@ -129,8 +129,8 @@ while(1){
 	for(i=0;i<225;i++){
 		
 		//sendbuf[i]=(rand()%10)+0x30;	//rand() % (最大值-最小值+1) ) + 最小值
-		pkg_tx.TOFarray[i]=(float)i/16;	
-		printf("%.4f ",pkg_tx.TOFarray[i]);
+		pkg_tx.TOFarray[i]=i*i;	
+		//printf("%d ",pkg_tx.TOFarray[i]);
 	
 	}//for 
 	
@@ -177,12 +177,16 @@ while(1){
 			
 			for(i=0;i<RX_BUFLEN;i++){
 				recvbuf[i]=recvbuf[i+8];//shift "aurix: " out
-				if( (recvbuf[i]!=sendbuf[i]) && (i<=TX_BUFLEN) )	diff_bytes++;		
+				if( (recvbuf[i]!=sendbuf[i]) && (i<TX_BUFLEN) ){
+					diff_bytes++;		
+					printf("R:%X T:%X diff at index %d\n",recvbuf[i],sendbuf[i],i);
+				}
 			}//for 
 			
 			printf("Bytes received: %d diff:%d \n", iResult,diff_bytes);
-			printf("data:");
+			
 			/*
+			printf("data:");
 			for(i=0;i<RX_BUFLEN;i++){
 				if(i%4 == 0)
 					printf("num=%2d \n",i);
@@ -195,9 +199,9 @@ while(1){
 			diff_bytes=0;
 			for(i=0;i<225;i++){
 				if(pkg_rx.TOFarray[i] != pkg_tx.TOFarray[i]) diff_bytes++;
-				printf("%.4f ",pkg_rx.TOFarray[i]);
+				//printf("%d ",pkg_rx.TOFarray[i]);
 			}//for 
-			printf("\nfloat diff:%d \n", diff_bytes);
+			printf("\nint diff:%d \n", diff_bytes);
 	
 		
 		}//iResult > 0
