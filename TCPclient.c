@@ -1,4 +1,6 @@
-/* 
+/*
+ * Function version
+ * 
  * 1.在 Windows 使用 Socket 需要 link Winsock Library。[client端]
  *   link方式：
  *   專案的「屬性」->「組態屬性」->「連結器」->「輸入」->「其他相依性」加入 wsock32.lib 或  Ws2_32.lib
@@ -12,9 +14,6 @@
  * ================================20160428==================================================  
  * 3. Max. 1460 bytes
  * 4. Add package_struct, and float,int,.etc array in structure can send and receive correctly
- *
- *
- *
  *
  *
  */
