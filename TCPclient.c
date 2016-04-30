@@ -44,42 +44,52 @@ struct package_struct
 		
 };
 
+/********* Gloabal Variables *********/
+WSADATA wsaData;
+SOCKET ConnectSocket = INVALID_SOCKET;
+struct addrinfo *result = NULL,
+                *ptr = NULL,
+                hints;
+//char *sendbuf ;
+char sendbuf[TX_BUFLEN];	
+char recvbuf[RX_BUFLEN];
+int iResult;
+int recvbuflen = RX_BUFLEN;
+/********* Gloabal Variables *********/
 
-
-int __cdecl main(void) 
-{
-	struct package_struct pkg_tx,pkg_rx; 
+void TCPclientInit(void){
 	
-	
-	int i;
-    WSADATA wsaData;
-    SOCKET ConnectSocket = INVALID_SOCKET;
-    struct addrinfo *result = NULL,
-                    *ptr = NULL,
-                    hints;
-    //char *sendbuf ;
-	char sendbuf[TX_BUFLEN];	
-    char recvbuf[RX_BUFLEN];
-    int iResult;
-    int recvbuflen = RX_BUFLEN;
-    
-	srand(time(NULL));
-    
 	memset(recvbuf,0,sizeof(recvbuf));
 	memset(sendbuf,0,sizeof(sendbuf));
-			
 
     // Initialize Winsock
     iResult = WSAStartup(MAKEWORD(2,2), &wsaData);
     if (iResult != 0) {
         printf("WSAStartup failed with error: %d\n", iResult);
+		system("pause");
         return 2;
     }
 
     ZeroMemory( &hints, sizeof(hints) );
     hints.ai_family = AF_UNSPEC;
     hints.ai_socktype = SOCK_STREAM;
-    hints.ai_protocol = IPPROTO_TCP;
+    hints.ai_protocol = IPPROTO_TCP;	
+	
+}
+
+
+int main(void) 
+{
+	struct package_struct pkg_tx,pkg_rx; 
+	
+	
+	int i;
+ 
+    
+	srand(time(NULL));
+    	
+
+
 
 while(1){
     // Resolve the server address and port
