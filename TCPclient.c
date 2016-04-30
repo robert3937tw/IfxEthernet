@@ -44,23 +44,30 @@ struct package_struct
 		
 };
 
-/********* Gloabal Variables *********/
+/********* Extern Variables *********/
+
+/********* Extern Variables *********/
+
+/********* Global Variables *********/
+int i;
+//char *sendbuf ;
+//char sendbuf[TX_BUFLEN];	
+char recvbuf[RX_BUFLEN];
+int iResult;
+int recvbuflen = RX_BUFLEN;
+
 WSADATA wsaData;
 SOCKET ConnectSocket = INVALID_SOCKET;
 struct addrinfo *result = NULL,
                 *ptr = NULL,
                 hints;
-//char *sendbuf ;
-char sendbuf[TX_BUFLEN];	
-char recvbuf[RX_BUFLEN];
-int iResult;
-int recvbuflen = RX_BUFLEN;
-/********* Gloabal Variables *********/
+/********* Global Variables *********/
+
 
 void TCPclientInit(void){
 	
 	memset(recvbuf,0,sizeof(recvbuf));
-	memset(sendbuf,0,sizeof(sendbuf));
+	//memset(sendbuf,0,sizeof(sendbuf));
 
     // Initialize Winsock
     iResult = WSAStartup(MAKEWORD(2,2), &wsaData);
@@ -77,17 +84,8 @@ void TCPclientInit(void){
 	
 }
 
-
-int main(void) 
-{
-	struct package_struct pkg_tx,pkg_rx; 
-		
-	int i;
-     
-	srand(time(NULL));
-    	
-while(1){
-    // Resolve the server address and port
+void TCPclientCommunication(char *sendbuf, int sendbufLen){
+	   // Resolve the server address and port
     iResult = getaddrinfo(SERVER_IP, SERVER_PORT, &hints, &result);
     if ( iResult != 0 ) {
         printf("getaddrinfo failed with error: %d\n", iResult);
@@ -95,12 +93,11 @@ while(1){
 		system("pause");
         return 3;
     }
-
 	
-
+	i=0;
     // Attempt to connect to an address until one succeeds
     for(ptr=result; ptr != NULL ;ptr=ptr->ai_next) {
-
+		i++;
         // Create a SOCKET for connecting to server
         ConnectSocket = socket(ptr->ai_family, ptr->ai_socktype, ptr->ai_protocol);
         if (ConnectSocket == INVALID_SOCKET) {
@@ -117,9 +114,9 @@ while(1){
             ConnectSocket = INVALID_SOCKET;
             continue;
         }
-        break;
+        //break;
     }
-
+	printf("ptr try %d times\n",i);
     freeaddrinfo(result);
 
     if (ConnectSocket == INVALID_SOCKET) {
@@ -128,28 +125,9 @@ while(1){
 		system("pause");
         return 5;
     }
-
-	//random
-	for(i=0;i<225;i++){
-		
-		//sendbuf[i]=(rand()%10)+0x30;	//rand() % (程-程+1) ) + 程
-		pkg_tx.TOFarray[i]=i*i;	
-		//printf("%d ",pkg_tx.TOFarray[i]);
-	
-	}//for 
-	
-	memcpy(sendbuf,&pkg_tx,sizeof(pkg_tx));
-	/*	
-	for(i=0;i<TX_BUFLEN;i++){
-		if(i%4 == 0)
-			printf("num=%2d \n",i);
-		printf("%02X ", sendbuf[i]);
-	}
-	printf("\n");
-	*/
 	
     // Send an initial buffer
-    iResult = send( ConnectSocket, sendbuf, (int)sizeof(sendbuf), 0 );
+    iResult = send( ConnectSocket, sendbuf, sendbufLen, 0 );
     if (iResult == SOCKET_ERROR) {
         printf("send failed with error: %d\n", WSAGetLastError());
         closesocket(ConnectSocket);
@@ -158,7 +136,7 @@ while(1){
         return 6;
     }
 
-    printf("Bytes sent: %ld size:%d \n", iResult,sizeof(sendbuf));
+    printf("Bytes sent: %ld size:%d \n", iResult,sendbufLen);
 
 
     // shutdown the connection since no more data will be sent
@@ -176,35 +154,23 @@ while(1){
         iResult = recv(ConnectSocket, recvbuf, recvbuflen, 0);
         if ( iResult > 0 ){
 			
-			//Verify
-			int diff_bytes=0;
-			
-			for(i=0;i<RX_BUFLEN;i++){
-				recvbuf[i]=recvbuf[i+8];//shift "aurix: " out
-				if( (recvbuf[i]!=sendbuf[i]) && (i<TX_BUFLEN) )	diff_bytes++;		
-			}//for 
-			
-			printf("Bytes received: %d diff:%d \n", iResult,diff_bytes);
-			printf("data:");
-			/*
-			for(i=0;i<RX_BUFLEN;i++){
-				if(i%4 == 0)
-					printf("num=%2d \n",i);
-				printf("%02X ", recvbuf[i]);
-			}
-			printf("\n");
-			*/
-			memcpy(&pkg_rx,recvbuf,sizeof(pkg_rx));
+			printf("Bytes received: %d \n", iResult);
 	
-			diff_bytes=0;
-			for(i=0;i<225;i++){
-				if(pkg_rx.TOFarray[i] != pkg_tx.TOFarray[i]) diff_bytes++;
-				printf("%.4f ",pkg_rx.TOFarray[i]);
-			}//for 
-			printf("\nfloat diff:%d \n", diff_bytes);
 	
-		
-		}//iResult > 0
+	//Verify
+	//int diff_bytes=0;
+			
+	for(i=0;i<RX_BUFLEN;i++){
+		recvbuf[i]=recvbuf[i+8];//shift "aurix: " out
+		/*
+		if( (recvbuf[i]!=sendbuf[i]) && (i<TX_BUFLEN) ){
+			diff_bytes++;		
+			printf("R:%X T:%X diff at index %d\n",recvbuf[i],sendbuf[i],i);
+		}
+		*/		
+	}//for 
+	
+	}//iResult > 0
         else if ( iResult == 0 )
             printf("Connection closed\n");
         else
@@ -212,15 +178,48 @@ while(1){
 
     } while( iResult > 0 );
 
-    // cleanup
+    // Close the SOCKET
     closesocket(ConnectSocket);
+		
+}
+
+
+int main(void) 
+{
+	struct package_struct pkg_tx,pkg_rx; 
+	int diff_bytes;
 	
+	srand(time(NULL));
+	
+	TCPclientInit();
+    	
+	//assign (random)
+	for(i=0;i<225;i++){
+		
+		//sendbuf[i]=(rand()%10)+0x30;	//rand() % (程-程+1) ) + 程
+		pkg_tx.TOFarray[i]=i*i;	
+		//printf("%d ",pkg_tx.TOFarray[i]);
+	
+	}//for 	
+		
+while(1){
+ 
+	TCPclientCommunication(&pkg_tx,sizeof(pkg_tx));
+
+	memcpy(&pkg_rx,recvbuf,sizeof(pkg_rx));
+	
+	diff_bytes=0;
+	for(i=0;i<225;i++){
+		if(pkg_rx.TOFarray[i] != pkg_tx.TOFarray[i]) diff_bytes++;
+		printf("%d ",pkg_rx.TOFarray[i]);
+	}//for 
+	printf("\nint diff:%d \n", diff_bytes);
 	
 	system("pause");
 }//while    
 
+	// cleanup
 	WSACleanup();
 
-	system("pause");
     return 0;
 }
