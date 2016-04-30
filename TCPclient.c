@@ -32,15 +32,15 @@
 #pragma comment (lib, "Mswsock.lib")
 #pragma comment (lib, "AdvApi32.lib")
 
-#define TX_BUFLEN 1460	//max 1460 but "Aurix:  " occupi 8 bytes
+#define TX_BUFLEN 900	//max 1460 but "Aurix:  " occupi 8 bytes
 #define RX_BUFLEN 910
 //#define DEFAULT_BUFLEN 50
 #define SERVER_PORT "40050"
-#define SERVER_IP "192.168.0.20"
+#define SERVER_IP "192.168.0.21"
 
 struct package_struct
 {
-	float TOFarray[225];	
+	int TOFarray[225];	
 		
 };
 
@@ -81,16 +81,11 @@ void TCPclientInit(void){
 int main(void) 
 {
 	struct package_struct pkg_tx,pkg_rx; 
-	
-	
+		
 	int i;
- 
-    
+     
 	srand(time(NULL));
     	
-
-
-
 while(1){
     // Resolve the server address and port
     iResult = getaddrinfo(SERVER_IP, SERVER_PORT, &hints, &result);
@@ -138,8 +133,8 @@ while(1){
 	for(i=0;i<225;i++){
 		
 		//sendbuf[i]=(rand()%10)+0x30;	//rand() % (最大值-最小值+1) ) + 最小值
-		pkg_tx.TOFarray[i]=(float)i/16;	
-		printf("%.4f ",pkg_tx.TOFarray[i]);
+		pkg_tx.TOFarray[i]=i*i;	
+		//printf("%d ",pkg_tx.TOFarray[i]);
 	
 	}//for 
 	
@@ -186,7 +181,7 @@ while(1){
 			
 			for(i=0;i<RX_BUFLEN;i++){
 				recvbuf[i]=recvbuf[i+8];//shift "aurix: " out
-				if( (recvbuf[i]!=sendbuf[i]) && (i<=TX_BUFLEN) )	diff_bytes++;		
+				if( (recvbuf[i]!=sendbuf[i]) && (i<TX_BUFLEN) )	diff_bytes++;		
 			}//for 
 			
 			printf("Bytes received: %d diff:%d \n", iResult,diff_bytes);
