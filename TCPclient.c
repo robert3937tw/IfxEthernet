@@ -32,7 +32,7 @@
 #pragma comment (lib, "Mswsock.lib")
 #pragma comment (lib, "AdvApi32.lib")
 
-#define TX_BUFLEN 900	//max 1460 but "Aurix:  " occupi 8 bytes
+//#define TX_BUFLEN 900	//max 1460 but "Aurix:  " occupi 8 bytes
 #define RX_BUFLEN 910
 //#define DEFAULT_BUFLEN 50
 #define SERVER_PORT "40050"
@@ -52,7 +52,7 @@ struct package_struct
 int i;
 //char *sendbuf ;
 //char sendbuf[TX_BUFLEN];	
-char recvbuf[RX_BUFLEN];
+//char recvbuf[RX_BUFLEN];
 int iResult;
 int recvbuflen = RX_BUFLEN;
 
@@ -66,7 +66,7 @@ struct addrinfo *result = NULL,
 
 void TCPclientInit(void){
 	
-	memset(recvbuf,0,sizeof(recvbuf));
+	//memset(recvbuf,0,sizeof(recvbuf));
 	//memset(sendbuf,0,sizeof(sendbuf));
 
     // Initialize Winsock
@@ -84,7 +84,7 @@ void TCPclientInit(void){
 	
 }
 
-void TCPclientCommunication(char *sendbuf, int sendbufLen){
+void TCPclientCommunication(char *sendbuf, int sendbufLen, char *recvbuf){
 	   // Resolve the server address and port
     iResult = getaddrinfo(SERVER_IP, SERVER_PORT, &hints, &result);
     if ( iResult != 0 ) {
@@ -116,7 +116,7 @@ void TCPclientCommunication(char *sendbuf, int sendbufLen){
         }
         //break;
     }
-	printf("ptr try %d times\n",i);
+	//printf("ptr try %d times\n",i);
     freeaddrinfo(result);
 
     if (ConnectSocket == INVALID_SOCKET) {
@@ -136,8 +136,9 @@ void TCPclientCommunication(char *sendbuf, int sendbufLen){
         return 6;
     }
 
-    printf("Bytes sent: %ld size:%d \n", iResult,sendbufLen);
-
+    //printf("Bytes sent: %ld size:%d \n", iResult,sendbufLen);
+	//for(i=0;i<iResult;i+=4)
+	//		printf("%X %X %X %X \n",*(sendbuf+i),*(sendbuf+i+1),*(sendbuf+i+2),*(sendbuf+i+3));
 
     // shutdown the connection since no more data will be sent
     iResult = shutdown(ConnectSocket, SD_SEND);
@@ -154,21 +155,10 @@ void TCPclientCommunication(char *sendbuf, int sendbufLen){
         iResult = recv(ConnectSocket, recvbuf, recvbuflen, 0);
         if ( iResult > 0 ){
 			
-			printf("Bytes received: %d \n", iResult);
-	
-	
-	//Verify
-	//int diff_bytes=0;
-			
-	for(i=0;i<RX_BUFLEN;i++){
-		recvbuf[i]=recvbuf[i+8];//shift "aurix: " out
-		/*
-		if( (recvbuf[i]!=sendbuf[i]) && (i<TX_BUFLEN) ){
-			diff_bytes++;		
-			printf("R:%X T:%X diff at index %d\n",recvbuf[i],sendbuf[i],i);
-		}
-		*/		
-	}//for 
+			//printf("Bytes received: %d \n", iResult);
+			//recvbuf=recvbuf+8;
+			//for(i=0;i<iResult;i+=4)
+			//printf("%X %X %X %X \n",*(recvbuf+i),*(recvbuf+i+1),*(recvbuf+i+2),*(recvbuf+i+3));
 	
 	}//iResult > 0
         else if ( iResult == 0 )
@@ -180,6 +170,8 @@ void TCPclientCommunication(char *sendbuf, int sendbufLen){
 
     // Close the SOCKET
     closesocket(ConnectSocket);
+	
+
 		
 }
 
@@ -188,6 +180,12 @@ int main(void)
 {
 	struct package_struct pkg_tx,pkg_rx; 
 	int diff_bytes;
+	//double start,end;
+	LARGE_INTEGER start, end, timeus;
+	double thisTime,max=0,min=999,total=0;
+	int count=0;
+	
+	QueryPerformanceFrequency(&timeus);
 	
 	srand(time(NULL));
 	
@@ -197,29 +195,44 @@ int main(void)
 	for(i=0;i<225;i++){
 		
 		//sendbuf[i]=(rand()%10)+0x30;	//rand() % (最大值-最小值+1) ) + 最小值
-		pkg_tx.TOFarray[i]=i*i;	
+		pkg_tx.TOFarray[i]= i;	
 		//printf("%d ",pkg_tx.TOFarray[i]);
 	
 	}//for 	
 		
-while(1){
- 
-	TCPclientCommunication(&pkg_tx,sizeof(pkg_tx));
-
-	memcpy(&pkg_rx,recvbuf,sizeof(pkg_rx));
+while(count <5000){
+	printf("count:%d \n",++count);
+	//start=clock();
+    QueryPerformanceCounter(&start);
+    
+	TCPclientCommunication(&pkg_tx, sizeof(pkg_tx), &pkg_rx);
+	
+    QueryPerformanceCounter(&end);
+    //end=clock();	
+	
+	//memcpy(&pkg_rx,recvptr+8,sizeof(pkg_rx));//special case
 	
 	diff_bytes=0;
 	for(i=0;i<225;i++){
 		if(pkg_rx.TOFarray[i] != pkg_tx.TOFarray[i]) diff_bytes++;
-		printf("%d ",pkg_rx.TOFarray[i]);
+		//printf("%3d ",pkg_rx.TOFarray[i]);
 	}//for 
-	printf("\nint diff:%d \n", diff_bytes);
 	
-	system("pause");
+	
+	thisTime=1000*(end.QuadPart-start.QuadPart)/(double)(timeus.QuadPart);
+	printf("\nint diff:%d time:%lf ms\n", diff_bytes,thisTime);
+	if(count>1){
+		if(thisTime>=max) max=thisTime;
+		if(thisTime<=min) min=thisTime;
+		total+=thisTime;
+	}	
+	printf("max:%lf ms, min:%lf ms, avg:%lf ms\n",max,min,(double)(total/count));
+	
+	
 }//while    
 
 	// cleanup
 	WSACleanup();
-
+	system("pause");
     return 0;
 }
