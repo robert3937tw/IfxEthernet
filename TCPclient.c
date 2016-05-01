@@ -196,11 +196,11 @@ int main(void)
 		
 		//sendbuf[i]=(rand()%10)+0x30;	//rand() % (最大值-最小值+1) ) + 最小值
 		pkg_tx.TOFarray[i]= i;	
-		//printf("%d ",pkg_tx.TOFarray[i]);
+		printf("%3d ",pkg_tx.TOFarray[i]);
 	
 	}//for 	
 		
-while(count <5000){
+while(1){
 	printf("count:%d \n",++count);
 	//start=clock();
     QueryPerformanceCounter(&start);
@@ -215,7 +215,7 @@ while(count <5000){
 	diff_bytes=0;
 	for(i=0;i<225;i++){
 		if(pkg_rx.TOFarray[i] != pkg_tx.TOFarray[i]) diff_bytes++;
-		//printf("%3d ",pkg_rx.TOFarray[i]);
+		printf("%3d ",pkg_rx.TOFarray[i]);
 	}//for 
 	
 	
@@ -227,7 +227,7 @@ while(count <5000){
 		total+=thisTime;
 	}	
 	printf("max:%lf ms, min:%lf ms, avg:%lf ms\n",max,min,(double)(total/count));
-	
+	system("pause");
 	
 }//while    
 
