@@ -84,7 +84,7 @@ void TCPclientInit(void){
 	
 }
 
-void TCPclientCommunication(char *sendbuf, int sendbufLen, char *recvdata){
+unsigned int TCPclientCommunication(char *sendbuf, int sendbufLen, char *recvdata){
 	
 	char* recvbuf = recvdata;
 	unsigned int recvdataLen;
@@ -178,18 +178,20 @@ void TCPclientCommunication(char *sendbuf, int sendbufLen, char *recvdata){
 
     // Close the SOCKET
     closesocket(ConnectSocket);
-			
+	return recvdataLen; 		
 }
 
 
 int main(void) 
 {
 	struct package_struct pkg_tx,pkg_rx; 
-	int diff_bytes=0;
+	unsigned int 	diff_bytes=0,
+					rxBytes,
+					count=0;
 	//double start,end;
 	LARGE_INTEGER start, end, timeus;
 	double thisTime,max=0,min=999,total=0;
-	int count=0;
+	
 	
 	QueryPerformanceFrequency(&timeus);
 	
@@ -199,7 +201,7 @@ int main(void)
     	
 	
 		
-while(count<1000){
+while(count<10){
 	
 	//assign (random)
 	for(i=0;i<ARRAY_LEN;i++){
@@ -212,11 +214,11 @@ while(count<1000){
 	
 	}//for 		
 	
-	printf("\ncount:%d \n",++count);
+	printf("\ncount:%u \n",++count);
 	//start=clock();
     QueryPerformanceCounter(&start);
     
-	TCPclientCommunication(&pkg_tx, sizeof(pkg_tx), &pkg_rx);
+	rxBytes=TCPclientCommunication(&pkg_tx, sizeof(pkg_tx), &pkg_rx);
 	
     QueryPerformanceCounter(&end);
     //end=clock();	
@@ -227,7 +229,7 @@ while(count<1000){
 	for(i=0;i<ARRAY_LEN;i++){
 		if(pkg_rx.TOFarray[i] != pkg_tx.TOFarray[i]){
 			diff_bytes++;
-			printf("diff at index %4d, TX:%02X RX:%02X\n",i,pkg_tx.TOFarray[i],pkg_rx.TOFarray[i]);			
+			//printf("diff at index %4d, TX:%02X RX:%02X\n",i,pkg_tx.TOFarray[i],pkg_rx.TOFarray[i]);			
 		}
 			
 		//if((i%16==0)&&(i>0)) printf("num=%5d\n",i);
@@ -237,7 +239,7 @@ while(count<1000){
 	
 	
 	thisTime=1000*(end.QuadPart-start.QuadPart)/(double)(timeus.QuadPart);
-	printf("\nHEX diff:%d time:%lf ms\n", diff_bytes,thisTime);
+	printf("\nHEX diff:%u time:%lf ms speed:%f KB/sec\n", diff_bytes,thisTime,1000.0*rxBytes/1024/thisTime);
 	if(count>1){
 		if(thisTime>=max) max=thisTime;
 		if(thisTime<=min) min=thisTime;
