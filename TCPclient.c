@@ -34,7 +34,7 @@
 
 //#define TX_BUFLEN 900	//max 1460 but "Aurix:  " occupi 8 bytes
 #define RX_BUFLEN 1460
-#define ARRAY_LEN 14641
+#define ARRAY_LEN 1459
 #define SERVER_PORT "40050"
 #define SERVER_IP "192.168.0.21"
 
@@ -161,14 +161,14 @@ unsigned int TCPclientCommunication(char *sendbuf, int sendbufLen, char *recvdat
         if ( iResult > 0 ){
 			recvbuf += iResult;		//shift buffer pointer
 			recvdataLen += iResult;	//calculate total number of receive bytes
-			//printf("Bytes received: %d \n", iResult);
+			printf("Bytes received: %d \n", iResult);
 			//recvbuf=recvbuf+8;
 			//for(i=0;i<iResult;i+=4)
 			//printf("%X %X %X %X \n",*(recvbuf+i),*(recvbuf+i+1),*(recvbuf+i+2),*(recvbuf+i+3));
 	
 	}//iResult > 0
         else if ( iResult == 0 ){
-            //printf("Connection closed\n");
+            printf("Connection closed\n");
 			//printf("Bytes received: %u \n", recvdataLen);
 		}
         else
@@ -201,7 +201,7 @@ int main(void)
     	
 	
 		
-while(count<10){
+while(1){
 	
 	//assign (random)
 	for(i=0;i<ARRAY_LEN;i++){
@@ -229,7 +229,7 @@ while(count<10){
 	for(i=0;i<ARRAY_LEN;i++){
 		if(pkg_rx.TOFarray[i] != pkg_tx.TOFarray[i]){
 			diff_bytes++;
-			//printf("diff at index %4d, TX:%02X RX:%02X\n",i,pkg_tx.TOFarray[i],pkg_rx.TOFarray[i]);			
+			printf("diff at index %4d, TX:%02X RX:%02X\n",i,pkg_tx.TOFarray[i],pkg_rx.TOFarray[i]);			
 		}
 			
 		//if((i%16==0)&&(i>0)) printf("num=%5d\n",i);
@@ -247,7 +247,7 @@ while(count<10){
 		printf("max:%lf ms, min:%lf ms, avg:%lf ms\n",max,min,(double)(total/(count-1)));
 	}	
 	
-	//system("pause");
+	system("pause");
 	
 }//while    
 
