@@ -33,14 +33,14 @@
 #pragma comment (lib, "AdvApi32.lib")
 
 //#define TX_BUFLEN 900	//max 1460 but "Aurix:  " occupi 8 bytes
-#define RX_BUFLEN 910
-//#define DEFAULT_BUFLEN 50
+#define RX_BUFLEN 1460
+#define ARRAY_LEN 14641
 #define SERVER_PORT "40050"
 #define SERVER_IP "192.168.0.21"
 
 struct package_struct
 {
-	int TOFarray[225];	
+	unsigned char TOFarray[ARRAY_LEN];	
 		
 };
 
@@ -84,8 +84,12 @@ void TCPclientInit(void){
 	
 }
 
-void TCPclientCommunication(char *sendbuf, int sendbufLen, char *recvbuf){
-	   // Resolve the server address and port
+void TCPclientCommunication(char *sendbuf, int sendbufLen, char *recvdata){
+	
+	char* recvbuf = recvdata;
+	unsigned int recvdataLen;
+	
+	// Resolve the server address and port
     iResult = getaddrinfo(SERVER_IP, SERVER_PORT, &hints, &result);
     if ( iResult != 0 ) {
         printf("getaddrinfo failed with error: %d\n", iResult);
@@ -150,19 +154,23 @@ void TCPclientCommunication(char *sendbuf, int sendbufLen, char *recvbuf){
     }
 
     // Receive until the peer closes the connection
+	recvdataLen=0;
     do {
 
         iResult = recv(ConnectSocket, recvbuf, recvbuflen, 0);
         if ( iResult > 0 ){
-			
+			recvbuf += iResult;		//shift buffer pointer
+			recvdataLen += iResult;	//calculate total number of receive bytes
 			//printf("Bytes received: %d \n", iResult);
 			//recvbuf=recvbuf+8;
 			//for(i=0;i<iResult;i+=4)
 			//printf("%X %X %X %X \n",*(recvbuf+i),*(recvbuf+i+1),*(recvbuf+i+2),*(recvbuf+i+3));
 	
 	}//iResult > 0
-        else if ( iResult == 0 )
-            printf("Connection closed\n");
+        else if ( iResult == 0 ){
+            //printf("Connection closed\n");
+			//printf("Bytes received: %u \n", recvdataLen);
+		}
         else
             printf("recv failed with error: %d\n", WSAGetLastError());
 
@@ -170,16 +178,14 @@ void TCPclientCommunication(char *sendbuf, int sendbufLen, char *recvbuf){
 
     // Close the SOCKET
     closesocket(ConnectSocket);
-	
-
-		
+			
 }
 
 
 int main(void) 
 {
 	struct package_struct pkg_tx,pkg_rx; 
-	int diff_bytes;
+	int diff_bytes=0;
 	//double start,end;
 	LARGE_INTEGER start, end, timeus;
 	double thisTime,max=0,min=999,total=0;
@@ -191,17 +197,22 @@ int main(void)
 	
 	TCPclientInit();
     	
-	//assign (random)
-	for(i=0;i<225;i++){
-		
-		//sendbuf[i]=(rand()%10)+0x30;	//rand() % (程-程+1) ) + 程
-		pkg_tx.TOFarray[i]= i;	
-		printf("%3d ",pkg_tx.TOFarray[i]);
 	
-	}//for 	
 		
-while(1){
-	printf("count:%d \n",++count);
+while(count<1000){
+	
+	//assign (random)
+	for(i=0;i<ARRAY_LEN;i++){
+		
+		//pkg_tx.TOFarray[i]=rand();	//rand() % (程-程+1) ) + 程
+		pkg_tx.TOFarray[i]= i;	
+		//if((i%16==0)&&(i>0)) printf("num=%5d\n",i);
+		//printf("%02X ",pkg_tx.TOFarray[i]);
+		
+	
+	}//for 		
+	
+	printf("\ncount:%d \n",++count);
 	//start=clock();
     QueryPerformanceCounter(&start);
     
@@ -212,22 +223,29 @@ while(1){
 	
 	//memcpy(&pkg_rx,recvptr+8,sizeof(pkg_rx));//special case
 	
-	diff_bytes=0;
-	for(i=0;i<225;i++){
-		if(pkg_rx.TOFarray[i] != pkg_tx.TOFarray[i]) diff_bytes++;
-		printf("%3d ",pkg_rx.TOFarray[i]);
+	//diff_bytes=0;
+	for(i=0;i<ARRAY_LEN;i++){
+		if(pkg_rx.TOFarray[i] != pkg_tx.TOFarray[i]){
+			diff_bytes++;
+			printf("diff at index %4d, TX:%02X RX:%02X\n",i,pkg_tx.TOFarray[i],pkg_rx.TOFarray[i]);			
+		}
+			
+		//if((i%16==0)&&(i>0)) printf("num=%5d\n",i);
+		//printf("%02X ",pkg_rx.TOFarray[i]);
+		
 	}//for 
 	
 	
 	thisTime=1000*(end.QuadPart-start.QuadPart)/(double)(timeus.QuadPart);
-	printf("\nint diff:%d time:%lf ms\n", diff_bytes,thisTime);
+	printf("\nHEX diff:%d time:%lf ms\n", diff_bytes,thisTime);
 	if(count>1){
 		if(thisTime>=max) max=thisTime;
 		if(thisTime<=min) min=thisTime;
 		total+=thisTime;
+		printf("max:%lf ms, min:%lf ms, avg:%lf ms\n",max,min,(double)(total/(count-1)));
 	}	
-	printf("max:%lf ms, min:%lf ms, avg:%lf ms\n",max,min,(double)(total/count));
-	system("pause");
+	
+	//system("pause");
 	
 }//while    
 
