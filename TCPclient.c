@@ -34,7 +34,7 @@
 
 //#define TX_BUFLEN 900	//max 1460 but "Aurix:  " occupi 8 bytes
 #define RX_BUFLEN 1460
-#define ARRAY_LEN 1459
+#define ARRAY_LEN 14641
 #define SERVER_PORT "40050"
 #define SERVER_IP "192.168.0.21"
 
@@ -161,15 +161,15 @@ unsigned int TCPclientCommunication(char *sendbuf, int sendbufLen, char *recvdat
         if ( iResult > 0 ){
 			recvbuf += iResult;		//shift buffer pointer
 			recvdataLen += iResult;	//calculate total number of receive bytes
-			printf("Bytes received: %d \n", iResult);
+			//printf("RX: %4d bytes\n", iResult);
 			//recvbuf=recvbuf+8;
 			//for(i=0;i<iResult;i+=4)
 			//printf("%X %X %X %X \n",*(recvbuf+i),*(recvbuf+i+1),*(recvbuf+i+2),*(recvbuf+i+3));
 	
 	}//iResult > 0
         else if ( iResult == 0 ){
-            printf("Connection closed\n");
-			//printf("Bytes received: %u \n", recvdataLen);
+            //printf("Connection closed\n");
+			//printf("Total bytes received: %u \n", recvdataLen);
 		}
         else
             printf("recv failed with error: %d\n", WSAGetLastError());
@@ -190,7 +190,7 @@ int main(void)
 					count=0;
 	//double start,end;
 	LARGE_INTEGER start, end, timeus;
-	double thisTime,max=0,min=999,total=0;
+	double thisTime,max=0,min=999,total=0,speed;
 	
 	
 	QueryPerformanceFrequency(&timeus);
@@ -201,19 +201,19 @@ int main(void)
     	
 	
 		
-while(1){
+while(count<10000){
 	
 	//assign (random)
 	for(i=0;i<ARRAY_LEN;i++){
 		
-		//pkg_tx.TOFarray[i]=rand();	//rand() % (程-程+1) ) + 程
-		pkg_tx.TOFarray[i]= i;	
+		pkg_tx.TOFarray[i]=rand();	//rand() % (程-程+1) ) + 程
+		//pkg_tx.TOFarray[i]= i;	
 		//if((i%16==0)&&(i>0)) printf("num=%5d\n",i);
 		//printf("%02X ",pkg_tx.TOFarray[i]);
 		
 	
 	}//for 		
-	
+	//printf("\n");
 	printf("\ncount:%u \n",++count);
 	//start=clock();
     QueryPerformanceCounter(&start);
@@ -238,8 +238,11 @@ while(1){
 	}//for 
 	
 	
-	thisTime=1000*(end.QuadPart-start.QuadPart)/(double)(timeus.QuadPart);
-	printf("\nHEX diff:%u time:%lf ms speed:%f KB/sec\n", diff_bytes,thisTime,1000.0*rxBytes/1024/thisTime);
+	thisTime = 1000*(end.QuadPart-start.QuadPart)/(double)(timeus.QuadPart);
+	speed = 1000.0*rxBytes/1024/thisTime;
+
+	printf("Total diff:%u ", diff_bytes);
+	printf("This time:%lf ms\n", thisTime);
 	if(count>1){
 		if(thisTime>=max) max=thisTime;
 		if(thisTime<=min) min=thisTime;
@@ -247,7 +250,7 @@ while(1){
 		printf("max:%lf ms, min:%lf ms, avg:%lf ms\n",max,min,(double)(total/(count-1)));
 	}	
 	
-	system("pause");
+	//system("pause");
 	
 }//while    
 
