@@ -19,7 +19,7 @@
  */
 
 #define WIN32_LEAN_AND_MEAN
-
+#include"TCPclient.h"
 #include <windows.h>
 #include <winsock2.h>
 #include <ws2tcpip.h>
@@ -64,7 +64,7 @@ struct addrinfo *result = NULL,
 /********* Global Variables *********/
 
 
-void TCPclientInit(void){
+int TCPclientInit(void){
 	
 	//memset(recvbuf,0,sizeof(recvbuf));
 	//memset(sendbuf,0,sizeof(sendbuf));
@@ -182,7 +182,7 @@ unsigned int TCPclientCommunication(char *sendbuf, int sendbufLen, char *recvdat
 }
 
 
-int main(void) 
+int TCPtest(void) 
 {
 	struct package_struct pkg_tx,pkg_rx; 
 	unsigned int 	diff_bytes=0,
@@ -218,7 +218,7 @@ while(count<10000){
 	//start=clock();
     QueryPerformanceCounter(&start);
     
-	rxBytes=TCPclientCommunication(&pkg_tx, sizeof(pkg_tx), &pkg_rx);
+	rxBytes=TCPclientCommunication((char*)&pkg_tx, sizeof(pkg_tx), (char*)&pkg_rx);
 	
     QueryPerformanceCounter(&end);
     //end=clock();	

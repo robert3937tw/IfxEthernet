@@ -15,11 +15,19 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\TCPclient.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\TCPserver.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\map.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\TCPclient.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\TCPclient.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
