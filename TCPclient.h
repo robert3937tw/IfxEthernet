@@ -25,7 +25,7 @@
 /********* Extern Variables *********/
 
 int TCPclientInit(void);
-unsigned int TCPclientCommunication(char *sendbuf, int sendbufLen, char *recvdata);
+unsigned int TCPclientCommunication(unsigned char *sendbuf, int sendbufLen, unsigned char *recvdata);
 int TCPtest(void);
 
 

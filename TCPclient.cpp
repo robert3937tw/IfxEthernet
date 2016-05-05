@@ -84,9 +84,9 @@ int TCPclientInit(void){
 	
 }
 
-unsigned int TCPclientCommunication(char *sendbuf, int sendbufLen, char *recvdata){
+unsigned int TCPclientCommunication(unsigned char *sendbuf, int sendbufLen, unsigned char *recvdata){
 	
-	char* recvbuf = recvdata;
+	unsigned char* recvbuf = recvdata;
 	unsigned int recvdataLen;
 	
 	// Resolve the server address and port
@@ -131,7 +131,7 @@ unsigned int TCPclientCommunication(char *sendbuf, int sendbufLen, char *recvdat
     }
 	
     // Send an initial buffer
-    iResult = send( ConnectSocket, sendbuf, sendbufLen, 0 );
+    iResult = send( ConnectSocket, (char*)sendbuf, sendbufLen, 0 );
     if (iResult == SOCKET_ERROR) {
         printf("send failed with error: %d\n", WSAGetLastError());
         closesocket(ConnectSocket);
@@ -157,7 +157,7 @@ unsigned int TCPclientCommunication(char *sendbuf, int sendbufLen, char *recvdat
 	recvdataLen=0;
     do {
 
-        iResult = recv(ConnectSocket, recvbuf, recvbuflen, 0);
+        iResult = recv(ConnectSocket, (char*)recvbuf, recvbuflen, 0);
         if ( iResult > 0 ){
 			recvbuf += iResult;		//shift buffer pointer
 			recvdataLen += iResult;	//calculate total number of receive bytes
@@ -218,7 +218,7 @@ while(count<10000){
 	//start=clock();
     QueryPerformanceCounter(&start);
     
-	rxBytes=TCPclientCommunication((char*)&pkg_tx, sizeof(pkg_tx), (char*)&pkg_rx);
+	rxBytes=TCPclientCommunication((unsigned char*)&pkg_tx, sizeof(pkg_tx), (unsigned char*)&pkg_rx);
 	
     QueryPerformanceCounter(&end);
     //end=clock();	

@@ -5,12 +5,15 @@
 //   	 communication:Aurix         //
 //		 ver:2.0                     //
 ///////////////////////////////////////
+//=====> Include <=======================
 #include"TCPclient.h"
+#include <windows.h>
+//=====> Include <=======================
+
 #include<stdio.h>
 #include<stdlib.h>
 #include<math.h>
 #include<time.h>
-
 ///////////////////////////////////
 //          definition           //
 ///////////////////////////////////
@@ -53,6 +56,14 @@ int main(void)
 
 	//output to Aurix//
 	unsigned char globalmap[14641]={0};              //the whole map is now.
+	
+//=====> input from Aurix <===============
+	unsigned char recvGlobalMap[14641]={0};
+	unsigned int rxBytes,diff_bytes=0;
+	
+	LARGE_INTEGER start, end, timeus;
+	double thisTime,max=0,min=999,total=0;
+//=====> input from Aurix <===============
 
 	//main func. variables//
 	float D[width]={0};
@@ -72,6 +83,11 @@ int main(void)
 	yr=0;
 	robotviewsita=0;
 	
+//===============> Init the Ethernet <===============
+	TCPclientInit();	
+	QueryPerformanceFrequency(&timeus);
+//===============> Init the Ethernet <===============
+while(1){
 	//get data//
 	
 	fptr=fopen("../frame.txt","r");
@@ -80,74 +96,78 @@ int main(void)
 		fscanf(fptr,"%f %f %f %f",&x[i],&y[i],&z[i],&confidence[i]);
 	printf("Read data completed\n");
 	fclose(fptr);
-	
-	/*
-	for(i=0;i<223;i++)
-	{
-		printf("%f ",y[i]);
-		printf("%f ",x[i]);
-		printf("%f ",z[i]);
-		printf("%f ",confidence[i]);
-		printf("\n");
-    }
-	*/	
-	
+
+//===============> timer start <===============		
+	QueryPerformanceCounter(&start);
+//===============> timer start <===============	
+
 	//grid-cell update//
 	tof2D(x, z, D);
-    printf("Calaulate distance...\n");
+    //printf("Calaulate distance...\n");
 	tof2sita(x, D, sita, confidence);  
-    printf("Calaulate angle...\n");
-	/*
-	for(i=0;i<223;i++)
-	{
-		printf("%f %f\n",D[i],sita[i]);
-	}*/
+    //printf("Calaulate angle...\n");
+
 	ptrx = pointrelativex(x1, D, sita, robotviewsita, xr);
 	ptry = pointrelativey(y1, D, sita, robotviewsita, yr);
-	printf("Transfer Coordinate...\n");
-	/*
-	for(i=0;i<223;i++)
-	{
-		printf("%f %f\n",*(ptrx+i),*(ptry+i));
-	}*/
-	
+	//printf("Transfer Coordinate...\n");
+		
 	gridize(ptrx, ptry, pointx, pointy);
 
-	
+	/*
 	for(i=0;i<223;i++)
 	{
 		printf("%d %d\n",pointx[i],pointy[i]);
 	}
-	
-	printf("Map update...\n");
-	updatecell(pointx, pointy, globalmap, confidence, xr, yr); 
-    printf("DONE\n");
-	
-	//print map//
-	/*
-	for(i=0;i<bigside;i++)
-	{
-		for(k=0;k<bigside;k++)
-	        printf("%d",globalmap[bigside*i+k]);
-	    
-		    
-	    printf("%d\n",i);
-	}
 	*/
+	
+	//printf("Map update...\n");
+	updatecell(pointx, pointy, globalmap, confidence, xr, yr); 
+    //printf("DONE\n");
+	
+//=====> send map and receive from Aurix <=======================
+	rxBytes = TCPclientCommunication(globalmap, sizeof(globalmap), recvGlobalMap);
+	
+	QueryPerformanceCounter(&end);
+	
+	for(i=0;i<14641;i++){
+		if(globalmap[i] != recvGlobalMap[i]){
+			diff_bytes++;
+			printf("diff at index %4d, TX:%02X RX:%02X\n",i,globalmap[i],recvGlobalMap[i]);			
+		}
+			
+		//if((i%16==0)&&(i>0)) printf("num=%5d\n",i);
+		//printf("%02X ",pkg_rx.TOFarray[i]);
+		
+	}//for 
+		
+	thisTime = 1000*(end.QuadPart-start.QuadPart)/(double)(timeus.QuadPart);
+	
+	printf("RX total: %u    Total diff:%u ",rxBytes, diff_bytes);
+	printf("This time:%lf ms\n", thisTime);
+	
+	fptro=fopen("../recvGlobalMap.txt","w");
+	
+	for(i=0;i<14641;i++)
+	{
+		fprintf(fptro,"%d ",recvGlobalMap[i]);
+	}
+		
+	fclose(fptro);	
+		
+//=====> send map and receive from Aurix <=======================
 	
 	//test write//
 	fptro=fopen("../globalmap.txt","w");
 	
 	for(i=0;i<14641;i++)
 	{
-		//temp=(int)globalmap[i];
 		fprintf(fptro,"%d ",globalmap[i]);
 	}
-	
-	
+		
 	fclose(fptro);
-	
+
 	system("pause");
+}//while loop
 	return 0;
 }
 
