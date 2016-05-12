@@ -38,11 +38,13 @@
 #define SERVER_PORT "40050"
 #define SERVER_IP "192.168.0.21"
 
+/*
 struct package_struct
 {
 	unsigned char TOFarray[ARRAY_LEN];	
 		
 };
+*/
 
 /********* Extern Variables *********/
 
@@ -181,9 +183,9 @@ unsigned int TCPclientCommunication(unsigned char *sendbuf, int sendbufLen, unsi
 	return recvdataLen; 		
 }
 
-
-int TCPtest(void) 
-{
+/*
+int TCPtest(void){
+	
 	struct package_struct pkg_tx,pkg_rx; 
 	unsigned int 	diff_bytes=0,
 					rxBytes,
@@ -259,3 +261,6 @@ while(count<10000){
 	system("pause");
     return 0;
 }
+*/
+
+

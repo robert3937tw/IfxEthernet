@@ -57,8 +57,8 @@ int main(void)
 	//output to Aurix//
 	unsigned char globalmap[14641]={0};              //the whole map is now.
 	
-//=====> input from Aurix <===============
-	unsigned char recvGlobalMap[14641]={0};
+//=====> return from Aurix <===============
+	CARINFO CarInfo;
 	unsigned int rxBytes,diff_bytes=0;
 	
 	LARGE_INTEGER start, end, timeus;
@@ -74,7 +74,7 @@ int main(void)
 	int pointy[width]={0};                 //the point which has been through gridize func.,defined which grid it belongs to.
 	int i,k;
     FILE *fptr;
-    FILE *fptro;
+	FILE *fptro;
 	float x1[width];
 	float y1[width];
 	//int temp;
@@ -125,34 +125,18 @@ while(1){
     //printf("DONE\n");
 	
 //=====> send map and receive from Aurix <=======================
-	rxBytes = TCPclientCommunication(globalmap, sizeof(globalmap), recvGlobalMap);
+	rxBytes = TCPclientCommunication(globalmap, sizeof(globalmap), (unsigned char*)&CarInfo);
 	
 	QueryPerformanceCounter(&end);
 	
-	for(i=0;i<14641;i++){
-		if(globalmap[i] != recvGlobalMap[i]){
-			diff_bytes++;
-			printf("diff at index %4d, TX:%02X RX:%02X\n",i,globalmap[i],recvGlobalMap[i]);			
-		}
-			
-		//if((i%16==0)&&(i>0)) printf("num=%5d\n",i);
-		//printf("%02X ",pkg_rx.TOFarray[i]);
-		
-	}//for 
-		
 	thisTime = 1000*(end.QuadPart-start.QuadPart)/(double)(timeus.QuadPart);
 	
-	printf("RX total: %u    Total diff:%u ",rxBytes, diff_bytes);
+	printf("RX total: %u ",rxBytes);
 	printf("This time:%lf ms\n", thisTime);
-	
-	fptro=fopen("../recvGlobalMap.txt","w");
-	
-	for(i=0;i<14641;i++)
-	{
-		fprintf(fptro,"%d ",recvGlobalMap[i]);
-	}
 		
-	fclose(fptro);	
+	printf("Car x:%d y:%d angle:%f",CarInfo.x, CarInfo.y, CarInfo.angle);
+			
+	
 		
 //=====> send map and receive from Aurix <=======================
 	

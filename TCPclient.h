@@ -21,6 +21,13 @@
 
 
 /********* Extern Variables *********/
+struct CARINFO
+{
+	int x,y;	//Car coordinate	
+	float angle;//Include angle between y-axis and car direction
+		
+};
+
 
 /********* Extern Variables *********/
 
