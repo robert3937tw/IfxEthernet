@@ -33,7 +33,7 @@
 #pragma comment (lib, "AdvApi32.lib")
 
 //#define TX_BUFLEN 900	//max 1460 but "Aurix:  " occupi 8 bytes
-#define RX_BUFLEN 1460
+#define RX_BUFLEN 100
 #define ARRAY_LEN 14641
 #define SERVER_PORT "40050"
 #define SERVER_IP "192.168.0.21"
@@ -63,11 +63,19 @@ SOCKET ConnectSocket = INVALID_SOCKET;
 struct addrinfo *result = NULL,
                 *ptr = NULL,
                 hints;
+				
+				
+LARGE_INTEGER start, end, timeus;				
+double thisTime;
+#define timerStart	QueryPerformanceCounter(&start);	
+#define timerStop	QueryPerformanceCounter(&end);	
+#define timerShow 	thisTime = 1000*(end.QuadPart-start.QuadPart)/(double)(timeus.QuadPart);printf("measured time:%lf\n",thisTime);
+
 /********* Global Variables *********/
 
 
 int TCPclientInit(void){
-	
+	QueryPerformanceFrequency(&timeus);
 	//memset(recvbuf,0,sizeof(recvbuf));
 	//memset(sendbuf,0,sizeof(sendbuf));
 
@@ -133,7 +141,9 @@ unsigned int TCPclientCommunication(unsigned char *sendbuf, int sendbufLen, unsi
     }
 	
     // Send an initial buffer
+
     iResult = send( ConnectSocket, (char*)sendbuf, sendbufLen, 0 );
+
     if (iResult == SOCKET_ERROR) {
         printf("send failed with error: %d\n", WSAGetLastError());
         closesocket(ConnectSocket);
@@ -142,6 +152,7 @@ unsigned int TCPclientCommunication(unsigned char *sendbuf, int sendbufLen, unsi
         return 6;
     }
 
+	
     //printf("Bytes sent: %ld size:%d \n", iResult,sendbufLen);
 	//for(i=0;i<iResult;i+=4)
 	//		printf("%X %X %X %X \n",*(sendbuf+i),*(sendbuf+i+1),*(sendbuf+i+2),*(sendbuf+i+3));
@@ -157,18 +168,22 @@ unsigned int TCPclientCommunication(unsigned char *sendbuf, int sendbufLen, unsi
 
     // Receive until the peer closes the connection
 	recvdataLen=0;
-    do {
 
+    do {
+timerStart;	
         iResult = recv(ConnectSocket, (char*)recvbuf, recvbuflen, 0);
+timerStop;
+timerShow;
         if ( iResult > 0 ){
-			recvbuf += iResult;		//shift buffer pointer
-			recvdataLen += iResult;	//calculate total number of receive bytes
-			//printf("RX: %4d bytes\n", iResult);
-			//recvbuf=recvbuf+8;
 			//for(i=0;i<iResult;i+=4)
 			//printf("%X %X %X %X \n",*(recvbuf+i),*(recvbuf+i+1),*(recvbuf+i+2),*(recvbuf+i+3));
-	
-	}//iResult > 0
+			//printf("RX: %4d bytes\n", iResult);
+			
+			recvbuf += iResult;		//shift buffer pointer
+			recvdataLen += iResult;	//calculate total number of receive bytes
+			
+			
+		}//iResult > 0
         else if ( iResult == 0 ){
             //printf("Connection closed\n");
 			//printf("Total bytes received: %u \n", recvdataLen);
@@ -177,6 +192,7 @@ unsigned int TCPclientCommunication(unsigned char *sendbuf, int sendbufLen, unsi
             printf("recv failed with error: %d\n", WSAGetLastError());
 
     } while( iResult > 0 );
+
 
     // Close the SOCKET
     closesocket(ConnectSocket);

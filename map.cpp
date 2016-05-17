@@ -94,7 +94,7 @@ while(1){
 	
 	for(i=0;i<width;i++)
 		fscanf(fptr,"%f %f %f %f",&x[i],&y[i],&z[i],&confidence[i]);
-	printf("Read data completed\n");
+	printf("\nRead data completed\n");
 	fclose(fptr);
 
 //===============> timer start <===============		
@@ -131,7 +131,7 @@ while(1){
 	
 	thisTime = 1000*(end.QuadPart-start.QuadPart)/(double)(timeus.QuadPart);
 	
-	printf("RX total: %u ",rxBytes);
+	printf("\nRX : %u ",rxBytes);
 	printf("This time:%lf ms\n", thisTime);
 		
 	printf("Car x:%d y:%d angle:%f",CarInfo.x, CarInfo.y, CarInfo.angle);
