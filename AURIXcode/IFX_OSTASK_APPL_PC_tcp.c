@@ -12,8 +12,10 @@
 
 /** includes
  *########################################################################*/
+
 //#include "time.h"
 //#include "math.h"
+
 
 #include "err.h"
 #include "lwIP.h"
@@ -29,6 +31,7 @@
 #include "EthLldInit.h"
 // FIXME 2014-01-20 HZ debug support not available with this HW
 #include "debugPin.h"
+
 
 /** defines
  *########################################################################*/
@@ -49,6 +52,10 @@ struct CARINFO{
 	
 };
 struct CARINFO CarInfo; 
+static u8_t map[RECV_PACKET_LEN];
+static uint32 rxByte,txLen,i;
+
+
 static err_t error = 0;
 
 static uint32 appl_pc_task_led_count;
@@ -61,6 +68,7 @@ static struct netconn *appl_pc_netconn_tcp_data_ptr;
 
 static u8_t ethApplPcBuffer[1536];  //KV ETH LLD works with 1536 bytes
 static u8_t *pEthApplPcBuffer;
+
 
 static struct netbuf *pPcTxNetBuf;
 static struct netbuf *pPcRxNetBuf;
@@ -107,9 +115,8 @@ void netconn_callback_tcp(struct netconn *, enum netconn_evt, u16_t len);
 
 static uint32 locPcPort;
 static uint32 remPcPort;
-static uint32 rxFrameLen,txLen;
-int rxByte;
-
+static uint32 rxFrameLen;
+				
 TASK(IFX_OSTASK_APPL_PC_TCP) {
 
 
@@ -182,9 +189,12 @@ TASK(IFX_OSTASK_APPL_PC_TCP) {
 
 	//JS fill xBuf with bogus text
 	// strcpy(pEthApplPcBuffer, "Hallo Welt, ich bin ein schoener Text der diesen Buffer hervorragend fuellt");
-
+	
+	CarInfo.angle=1;
+	txLen=sizeof(CarInfo);
+	pPcTxNetBuf->p->len = pPcTxNetBuf->p->tot_len = txLen;
+	
 	/* Grab new connection. */
-
 	// FUCHS tcp:
 	while (1) {
 		err = netconn_accept(appl_pc_netconn_tcp_handle_ptr,&appl_pc_netconn_tcp_data_ptr);
@@ -198,32 +208,25 @@ TASK(IFX_OSTASK_APPL_PC_TCP) {
 		// FUCHS tcp:
 		while (ERR_OK== netconn_recv(appl_pc_netconn_tcp_data_ptr,&pPcRxNetBuf))
 		{
-				
+			memcpy(map+rxFrameLen, pPcRxNetBuf->p->payload, pPcRxNetBuf->p->len);
 			rxFrameLen += pPcRxNetBuf->p->len;
-			rxByte ++;
-			//memcpy(pEthApplPcBuffer, pPcRxNetBuf->p->payload, rxFrameLen);
 			netbuf_delete(pPcRxNetBuf);
-			//RS232_WriteFormattedLine("Rx");
-							
+										
 			if (rxFrameLen >= RECV_PACKET_LEN) {
-								
+												
 				CarInfo.x++;
-				CarInfo.y=rxByte;
-				CarInfo.angle = rxFrameLen;//(CarInfo.angle+1)*1.05;
-				txLen=sizeof(CarInfo);
-								
+				CarInfo.y = rxFrameLen;
+				CarInfo.angle *=1.01;
+												
 				memcpy(pEthApplPcBuffer, &CarInfo, txLen);
 				pPcTxNetBuf->p->payload = pEthApplPcBuffer;
-				pPcTxNetBuf->p->len = pPcTxNetBuf->p->tot_len = txLen;
-
+				
 				// FUCHS tcp:
 				netconn_write(appl_pc_netconn_tcp_data_ptr, pPcTxNetBuf->p->payload, pPcTxNetBuf->p->len, NETCONN_COPY);
-					
+				//for(i=0;i<rxFrameLen;i++)
+				//	RS232_PutCh(map[i]);	
+								
 				rxFrameLen= 0;
-				rxByte=0;
-				//RS232_WriteFormattedLine("packet receive");		
-					
-
 					
 			}//if -> check receive whole packet 
 								

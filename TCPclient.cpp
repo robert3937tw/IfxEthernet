@@ -27,6 +27,7 @@
 #include <stdio.h>
 #include <time.h>
 
+
 // Need to link with Ws2_32.lib, Mswsock.lib, and Advapi32.lib
 #pragma comment (lib, "Ws2_32.lib")
 #pragma comment (lib, "Mswsock.lib")
@@ -63,14 +64,10 @@ SOCKET ConnectSocket = INVALID_SOCKET;
 struct addrinfo *result = NULL,
                 *ptr = NULL,
                 hints;
-				
-				
+
 LARGE_INTEGER start, end, timeus;				
 double thisTime;
-#define timerStart	QueryPerformanceCounter(&start);	
-#define timerStop	QueryPerformanceCounter(&end);	
-#define timerShow 	thisTime = 1000*(end.QuadPart-start.QuadPart)/(double)(timeus.QuadPart);printf("measured time:%lf\n",thisTime);
-
+				
 /********* Global Variables *********/
 
 
@@ -170,10 +167,7 @@ unsigned int TCPclientCommunication(unsigned char *sendbuf, int sendbufLen, unsi
 	recvdataLen=0;
 
     do {
-timerStart;	
         iResult = recv(ConnectSocket, (char*)recvbuf, recvbuflen, 0);
-timerStop;
-timerShow;
         if ( iResult > 0 ){
 			//for(i=0;i<iResult;i+=4)
 			//printf("%X %X %X %X \n",*(recvbuf+i),*(recvbuf+i+1),*(recvbuf+i+2),*(recvbuf+i+3));

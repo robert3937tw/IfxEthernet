@@ -56,7 +56,7 @@ int main(void)
 
 	//output to Aurix//
 	unsigned char globalmap[14641]={0};              //the whole map is now.
-	
+	int test[3660];
 //=====> return from Aurix <===============
 	CARINFO CarInfo;
 	unsigned int rxBytes,diff_bytes=0;
@@ -94,7 +94,7 @@ while(1){
 	
 	for(i=0;i<width;i++)
 		fscanf(fptr,"%f %f %f %f",&x[i],&y[i],&z[i],&confidence[i]);
-	printf("\nRead data completed\n");
+	printf("\nRead data completed");
 	fclose(fptr);
 
 //===============> timer start <===============		
@@ -125,6 +125,10 @@ while(1){
     //printf("DONE\n");
 	
 //=====> send map and receive from Aurix <=======================
+	for(i=0;i<3660;i++)
+		test[i]=i;
+	memcpy(globalmap, test,sizeof(test));
+	
 	rxBytes = TCPclientCommunication(globalmap, sizeof(globalmap), (unsigned char*)&CarInfo);
 	
 	QueryPerformanceCounter(&end);
@@ -134,7 +138,7 @@ while(1){
 	printf("\nRX : %u ",rxBytes);
 	printf("This time:%lf ms\n", thisTime);
 		
-	printf("Car x:%d y:%d angle:%f",CarInfo.x, CarInfo.y, CarInfo.angle);
+	printf("Car x:%d y:%d angle:%f\n",CarInfo.x, CarInfo.y, CarInfo.angle);
 			
 	
 		
@@ -150,7 +154,7 @@ while(1){
 		
 	fclose(fptro);
 
-	system("pause");
+	//system("pause");
 }//while loop
 	return 0;
 }

@@ -17,7 +17,12 @@
  *
  *
  */
-
+ 
+/******* Performance test ***********/
+#define timerStart	QueryPerformanceCounter(&start);	
+#define timerStop	QueryPerformanceCounter(&end);	
+#define timerShow 	thisTime = 1000*(end.QuadPart-start.QuadPart)/(double)(timeus.QuadPart);printf("measured time:%lf\n",thisTime);
+/******* Performance test ***********/
 
 
 /********* Extern Variables *********/
