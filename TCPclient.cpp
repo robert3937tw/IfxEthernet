@@ -20,7 +20,6 @@
 
 #define WIN32_LEAN_AND_MEAN
 #include"TCPclient.h"
-#include <windows.h>
 #include <winsock2.h>
 #include <ws2tcpip.h>
 #include <stdlib.h>
@@ -48,7 +47,8 @@ struct package_struct
 */
 
 /********* Extern Variables *********/
-
+LARGE_INTEGER start[timeNum], end[timeNum], timeus;				
+double TimeSave[timeNum];
 /********* Extern Variables *********/
 
 /********* Global Variables *********/
@@ -65,8 +65,7 @@ struct addrinfo *result = NULL,
                 *ptr = NULL,
                 hints;
 
-LARGE_INTEGER start, end, timeus;				
-double thisTime;
+
 				
 /********* Global Variables *********/
 
@@ -138,9 +137,9 @@ unsigned int TCPclientCommunication(unsigned char *sendbuf, int sendbufLen, unsi
     }
 	
     // Send an initial buffer
-
+timerStart(0);
     iResult = send( ConnectSocket, (char*)sendbuf, sendbufLen, 0 );
-
+timerStop(0);
     if (iResult == SOCKET_ERROR) {
         printf("send failed with error: %d\n", WSAGetLastError());
         closesocket(ConnectSocket);
@@ -165,7 +164,7 @@ unsigned int TCPclientCommunication(unsigned char *sendbuf, int sendbufLen, unsi
 
     // Receive until the peer closes the connection
 	recvdataLen=0;
-
+timerStart(1);
     do {
         iResult = recv(ConnectSocket, (char*)recvbuf, recvbuflen, 0);
         if ( iResult > 0 ){
@@ -186,7 +185,7 @@ unsigned int TCPclientCommunication(unsigned char *sendbuf, int sendbufLen, unsi
             printf("recv failed with error: %d\n", WSAGetLastError());
 
     } while( iResult > 0 );
-
+timerStop(1);
 
     // Close the SOCKET
     closesocket(ConnectSocket);

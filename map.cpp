@@ -7,7 +7,6 @@
 ///////////////////////////////////////
 //=====> Include <=======================
 #include"TCPclient.h"
-#include <windows.h>
 //=====> Include <=======================
 
 #include<stdio.h>
@@ -60,10 +59,10 @@ int main(void)
 //=====> return from Aurix <===============
 	CARINFO CarInfo;
 	unsigned int rxBytes,diff_bytes=0;
-	
-	LARGE_INTEGER start, end, timeus;
-	double thisTime,max=0,min=999,total=0;
-//=====> input from Aurix <===============
+		
+	double max=0,min=999,total=0;
+
+//=====> return from Aurix <===============
 
 	//main func. variables//
 	float D[width]={0};
@@ -94,11 +93,11 @@ while(1){
 	
 	for(i=0;i<width;i++)
 		fscanf(fptr,"%f %f %f %f",&x[i],&y[i],&z[i],&confidence[i]);
-	printf("\nRead data completed");
+	printf("\nRead data completed\n");
 	fclose(fptr);
 
 //===============> timer start <===============		
-	QueryPerformanceCounter(&start);
+timerStart(2);
 //===============> timer start <===============	
 
 	//grid-cell update//
@@ -125,21 +124,20 @@ while(1){
     //printf("DONE\n");
 	
 //=====> send map and receive from Aurix <=======================
+	/* //create test data
 	for(i=0;i<3660;i++)
 		test[i]=i;
 	memcpy(globalmap, test,sizeof(test));
-	
+	*/
 	rxBytes = TCPclientCommunication(globalmap, sizeof(globalmap), (unsigned char*)&CarInfo);
 	
-	QueryPerformanceCounter(&end);
+timerStop(2);
 	
-	thisTime = 1000*(end.QuadPart-start.QuadPart)/(double)(timeus.QuadPart);
-	
-	printf("\nRX : %u ",rxBytes);
-	printf("This time:%lf ms\n", thisTime);
+	printf("RX : %u\n",rxBytes);
+	printf("send:%.3lf ms, recv:%.3lf ms, ",TimeSave[0],TimeSave[1]);
+	printf("Total:%.3lf ms\n", TimeSave[2]);
 		
-	printf("Car x:%d y:%d angle:%f\n",CarInfo.x, CarInfo.y, CarInfo.angle);
-			
+	printf("Car x:%d y:%d angle:%.3f\n",CarInfo.x, CarInfo.y, CarInfo.angle);
 	
 		
 //=====> send map and receive from Aurix <=======================
@@ -154,7 +152,7 @@ while(1){
 		
 	fclose(fptro);
 
-	//system("pause");
+	system("pause");
 }//while loop
 	return 0;
 }
